@@ -12,7 +12,7 @@ export default function Hero() {
           transition={{ duration: 0.5 }}
           className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent"
         >
-          Sifat Sikder
+          Hi, I'm Sifat Sikder
         </motion.h1>
         
         <motion.p
