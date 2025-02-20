@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, log } from "./vite";
 import path from "path";
 
 const app = express();
@@ -11,6 +11,22 @@ app.use(express.urlencoded({ extended: false }));
 if (process.env.NODE_ENV === "production") {
   const publicPath = path.join(process.cwd(), "dist", "public");
   app.use(express.static(publicPath));
+
+  // Handle client-side routing
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(publicPath, "index.html"));
+  });
+} else {
+  // Development server setup
+  (async () => {
+    const server = await registerRoutes(app);
+    await setupVite(app, server);
+
+    const PORT = process.env.PORT || 5000;
+    server.listen(PORT, "0.0.0.0", () => {
+      log(`serving on port ${PORT}`);
+    });
+  })();
 }
 
 app.use((req, res, next) => {
@@ -44,29 +60,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  //This part is already handled in the if/else block above.  Leaving it here causes a duplicate server start.
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+  // app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  //   const status = err.status || err.statusCode || 500;
+  //   const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
-  });
+  //   res.status(status).json({ message });
+  //   throw err;
+  // });
 
-  // In development, use Vite's dev server
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    // In production, serve the static build and handle client-side routing
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(process.cwd(), "dist", "public", "index.html"));
-    });
-  }
-
-  // Use port from environment variable or default to 5000
-  const PORT = process.env.PORT || 5000;
-  server.listen(PORT, "0.0.0.0", () => {
-    log(`serving on port ${PORT}`);
-  });
 })();
