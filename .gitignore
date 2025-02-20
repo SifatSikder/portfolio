@@ -35,4 +35,4 @@ vite.config.ts.*
 *.tar.gz
 
 # TypeScript
-*.tsbuildinfo
+*.tsbuildinfoattached_assets/
